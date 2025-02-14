@@ -214,6 +214,9 @@ class Scanner {
                 } else if (ch == '>') {
                     nextCh();
                     return new TokenInfo(LAMBDA, line);
+                } else if (isDigit(ch)) {
+                    // I just realized you can have a negative first followed by an int, long, float, or double
+                    // I will get to this when I can.
                 } else {
                     return new TokenInfo(MINUS, line);
                 }
@@ -327,14 +330,6 @@ class Scanner {
                             nextCh();
                         }
                     }
-//                    nextCh();
-//                    prevChar = ch;
-//                    nextCh();
-//                    while (prevChar != '*' && ch != '/') {
-//                        prevChar = ch;
-//                        nextCh();
-//                    }
-//                    nextCh();
                 } else {
                     return new TokenInfo(DIV, line);
                 }
@@ -454,6 +449,11 @@ class Scanner {
                 } else if (isOctalDigit(ch)) {
                     buffer.append(ch);
                     nextCh();
+//                    if (ch == 'd' || ch == 'D') {
+//                        buffer.append(ch);
+//                        nextCh();
+//                        return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
+//                    }
                     while(isOctalDigit(ch)) {
                         buffer.append(ch);
                         prevNumericChar = ch;
@@ -469,6 +469,63 @@ class Scanner {
                         return new TokenInfo(OCTAL_LONG_LITERAL, buffer.toString(), line);
                     }
                     return new TokenInfo(OCTAL_INT_LITERAL, buffer.toString(), line);
+                } else if (ch == '.') {
+                    if (prevNumericChar == '_') {
+                        throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                "decimal point.");
+                    }
+                    buffer.append(ch);
+                    nextCh();
+                    if (ch == '_') {
+                        throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                "decimal point.");
+                    }
+                    while (isDigit(ch)) {
+                        buffer.append(ch);
+                        prevNumericChar = ch;
+                        nextCh();
+                    }
+                    if (ch == 'e' || ch == 'E') {
+                        if (prevNumericChar == '_') {
+                            throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                    "'e' or 'E' when using scientific notation.");
+                        }
+                        buffer.append(ch);
+                        nextCh();
+                        if (ch == '_') {
+                            throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                    "'e' or 'E' when using scientific notation.");
+                        }
+                        if (ch == '-' || ch == '+') {
+                            buffer.append(ch);
+                            nextCh();
+                            prevNumericChar = ch;
+                        }
+                        if (ch == '_') {
+                            throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                    "'+' or '-' when using scientific notation.");
+                        }
+                        while (isDigit(ch)) {
+                            buffer.append(ch);
+                            prevNumericChar = ch;
+                            nextCh();
+                        }
+                        if (ch == '_') {
+                            throw new RuntimeException("'_' underscores are not valid at the beginning or end of a " +
+                                    "numeric value.");
+                        }
+                        if (ch == 'f' || ch == 'F') {
+                            buffer.append(ch);
+                            nextCh();
+                            return new TokenInfo(FLOAT_LITERAL, buffer.toString(), line);
+                        } else if (ch == 'd' || ch == 'D') {
+                            buffer.append(ch);
+                            nextCh();
+                            return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
+                        } else {
+                            return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
+                        }
+                    }
                 } else {
                     return new TokenInfo(INT_LITERAL, buffer.toString(), line);
                 }
@@ -613,6 +670,9 @@ class Scanner {
                     nextCh();
                     return new TokenInfo(LONG_LITERAL, buffer.toString(), line);
                 } else {
+//                    if () {
+//
+//                    }
                     return new TokenInfo(INT_LITERAL, buffer.toString(), line);
                 }
             default:

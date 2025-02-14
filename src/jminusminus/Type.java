@@ -53,6 +53,13 @@ class Type {
      */
     public final static Type DOUBLE = typeFor(double.class);
 
+    // The start of the types I am adding
+
+    /**
+     * The float type.
+     */
+    public final static Type FLOAT = typeFor(float.class);
+
     /**
      * The java.lang.Integer type.
      */

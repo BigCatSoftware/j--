@@ -13,14 +13,19 @@ enum TokenKind {
     // Reserved words.
     ABSTRACT("abstract"), BOOLEAN("boolean"), CHAR("char"), CLASS("class"),
     ELSE("else"), EXTENDS("extends"), IF("if"), IMPORT("import"),
-    INSTANCEOF("instanceof"), INT("int"), NEW("new"), PACKAGE("package"),
+    INSTANCEOF("instanceof"),
+
+    INT("int"),
+
+    NEW("new"), PACKAGE("package"),
     PRIVATE("private"), PROTECTED("protected"), PUBLIC("public"), RETURN("return"),
     STATIC("static"), SUPER("super"), THIS("this"), VOID("void"), WHILE("while"),
 
     // Reserved words I added for exercise 2.12 from section 3.9 of Lexical Structure
     ASSERT("assert"), BREAK("break"), BYTE("byte"), CASE("case"), CATCH("catch"),
     CONST("const"), CONTINUE("continue"), DEFAULT("default"), DO("do"),
-    DOUBLE("double"), ENUM("enum"), FINAL("final"), FINALLY("finally"), FLOAT("float"),
+    DOUBLE("double"),
+    ENUM("enum"), FINAL("final"), FINALLY("finally"), FLOAT("float"),
     FOR("for"), GOTO("goto"), IMPLEMENTS("implements"), INTERFACE("interface"),
     LONG("long"), NATIVE("native"), SHORT("short"), STRICTFP("strictfp"),
     SWITCH("switch"), SYNCHRONIZED("synchronized"), THROW("throw"), THROWS("throws"),
@@ -40,8 +45,8 @@ enum TokenKind {
     UNSIGNED_RIGHT_SHIFT(">>>"), UNSIGNED_RIGHT_SHIFT_ASSIGN(">>>="),
 
     // Separators.
-    COMMA(","), DOT("."), LBRACK("["), LCURLY("{"), LPAREN("("), RBRACK("]"), RCURLY("}"),
-    RPAREN(")"), SEMI(";"),
+    COMMA(","), DOT("."), LBRACK("["), LCURLY("{"), LPAREN("("), RBRACK("]"),
+    RCURLY("}"), RPAREN(")"), SEMI(";"),
 
     // Identifiers.
     IDENTIFIER("<IDENTIFIER>"),
@@ -56,6 +61,7 @@ enum TokenKind {
 
     // Literals I added.
     DOUBLE_LITERAL("<DOUBLE_LITERAL>"), //
+
     FLOAT_LITERAL("<FLOAT_LITERAL>"), //
     LONG_LITERAL("<lONG_LITERAL>"), //
     HEX_LONG_LITERAL("<HEX_LONG_LITERAL>"),

@@ -567,6 +567,12 @@ public class Parser {
             return Type.CHAR;
         } else if (have(INT)) {
             return Type.INT;
+        } else if (have(DOUBLE)) {
+            return Type.DOUBLE;
+        } else if (have(FLOAT)) {
+            return Type.FLOAT;
+        } else if (have(LONG)) {
+            return Type.LONG;
         } else {
             reportParserError("Type sought where %s found", scanner.token().image());
             return Type.ANY;
@@ -678,10 +684,38 @@ public class Parser {
     private JExpression conditionalAndExpression() {
         int line = scanner.token().line();
         boolean more = true;
-        JExpression lhs = equalityExpression();
+        JExpression lhs = bitwiseExpression();
         while (more) {
             if (have(LAND)) {
                 lhs = new JLogicalAndOp(line, lhs, equalityExpression());
+            } else {
+                more = false;
+            }
+        }
+        return lhs;
+    }
+
+    /**
+     * Parses a bitwise expression and returns an AST for it.
+     *
+     * <pre>
+     *   bitwiseExpression ::= equalityExpression
+     *                          { ( BIT_AND | BIT_XOR | BOR ) equalityExpression }
+     * </pre>
+     *
+     * @return an AST for a bitwise expression.
+     */
+    private JExpression bitwiseExpression() {
+        int line = scanner.token().line();
+        boolean more = true;
+        JExpression lhs = equalityExpression();
+        while (more) {
+            if (have(BIT_AND)) {
+                lhs = new JAndOp(line, lhs, equalityExpression());
+            } else if (have (BIT_XOR)) {
+                lhs = new JXorOp(line, lhs, equalityExpression());
+            } else if (have(BIT_OR)) {
+                lhs = new JOrOp(line, lhs, equalityExpression());
             } else {
                 more = false;
             }
@@ -716,7 +750,7 @@ public class Parser {
      * Parses a relational expression and returns an AST for it.
      *
      * <pre>
-     *   relationalExpression ::= additiveExpression [ ( GT | LE ) additiveExpression
+     *   relationalExpression ::= shiftExpression [ ( GT | LE ) additiveExpression
      *                                               | INSTANCEOF referenceType ]
      * </pre>
      *
@@ -724,7 +758,7 @@ public class Parser {
      */
     private JExpression relationalExpression() {
         int line = scanner.token().line();
-        JExpression lhs = additiveExpression();
+        JExpression lhs = shiftExpression();
         if (have(GT)) {
             return new JGreaterThanOp(line, lhs, additiveExpression());
         } else if (have(LE)) {
@@ -734,6 +768,35 @@ public class Parser {
         } else {
             return lhs;
         }
+    }
+
+    /**
+     * Parses a shift expression and return an AST for it.
+     *
+     * <pre>
+     *   shiftExpression ::= additiveExpression
+     *                         { LEFT_SHIFT | RIGHT_SHIFT | UNSIGNED_RIGHT_SHIFT additiveExpression }
+     * </pre>
+     */
+    private JExpression shiftExpression() {
+        int line = scanner.token().line();
+        boolean more = true;
+        JExpression lhs = additiveExpression();
+        while (more) {
+            if (have(LEFT_SHIFT)) {
+                // lhs equals left shift op
+                lhs = new JALeftShiftOp(line, lhs, additiveExpression());
+            } else if (have(RIGHT_SHIFT)) {
+                // lhs equals right shift
+                lhs = new JARightShiftOp(line, lhs, additiveExpression());
+            } else if (have(UNSIGNED_RIGHT_SHIFT)) {
+                // lhs equals unsigned right shift
+                lhs = new JLRightShiftOp(line, lhs, additiveExpression());
+            } else {
+                more = false;
+            }
+        }
+        return lhs;
     }
 
     /**
@@ -777,6 +840,10 @@ public class Parser {
         while (more) {
             if (have(STAR)) {
                 lhs = new JMultiplyOp(line, lhs, unaryExpression());
+            } else if (have(DIV)) {
+                lhs = new JDivideOp(line, lhs, unaryExpression());
+            } else if (have(MOD)) {
+                lhs = new JRemainderOp(line, lhs, unaryExpression());
             } else {
                 more = false;
             }
@@ -1029,6 +1096,14 @@ public class Parser {
      */
     private JExpression literal() {
         int line = scanner.token().line();
+        System.out.println("Parsing token: " + scanner.token().image() + " of kind " + scanner.token().kind());
+        System.out.println( "["
+                + scanner.token().line()
+                + ": "
+                + "message"
+                + ", looking at a: "
+                + scanner.token().tokenRep()
+                + " = " + scanner.token().image() + "]");
         if (have(CHAR_LITERAL)) {
             return new JLiteralChar(line, scanner.previousToken().image());
         } else if (have(FALSE)) {
@@ -1041,7 +1116,7 @@ public class Parser {
             return new JLiteralString(line, scanner.previousToken().image());
         } else if (have(TRUE)) {
             return new JLiteralBoolean(line, scanner.previousToken().image());
-        } else if(have(DOUBLE_LITERAL)) {
+        } else if (have(DOUBLE_LITERAL)) {
             return new JLiteralDouble(line, scanner.previousToken().image());
         } else if (have(FLOAT_LITERAL)) {
             return new JLiteralFloat(line, scanner.previousToken().image());
@@ -1217,7 +1292,8 @@ public class Parser {
 
     // Returns true if we are looking at a basic type, and false otherwise.
     private boolean seeBasicType() {
-        return (see(BOOLEAN) || see(CHAR) || see(INT));
+        return (see(BOOLEAN) || see(CHAR) || see(INT) || see(DOUBLE)
+                || see(FLOAT) || see(LONG));
     }
 
     // Returns true if we are looking at a reference type, and false otherwise.
@@ -1226,7 +1302,8 @@ public class Parser {
             return true;
         } else {
             scanner.recordPosition();
-            if (have(BOOLEAN) || have(CHAR) || have(INT)) {
+            if (have(BOOLEAN) || have(CHAR) || have(INT)
+            || have(DOUBLE) || have(FLOAT) || have(LONG)) {
                 if (have(LBRACK) && see(RBRACK)) {
                     scanner.returnToPosition();
                     return true;
@@ -1244,4 +1321,18 @@ public class Parser {
         scanner.returnToPosition();
         return result;
     }
+
+    // A tracing aid. Invoke to debug the parser to see what token
+    // is being parsed at that point.
+
+     private void trace( String message )
+     {
+     System.err.println( "["
+     + scanner.token().line()
+     + ": "
+     + message
+     + ", looking at a: "
+     + scanner.token().tokenRep()
+     + " = " + scanner.token().image() + "]" );
+     }
 }

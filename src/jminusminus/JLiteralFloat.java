@@ -32,7 +32,7 @@ public class JLiteralFloat extends JExpression {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        type = Type.FLOAT;
         return this;
     }
 
@@ -40,7 +40,16 @@ public class JLiteralFloat extends JExpression {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        float f = toFloat();
+        if (f == 0.0f) {
+            output.addNoArgInstruction(FCONST_0);
+        } else if (f == 1.0f) {
+            output.addNoArgInstruction(FCONST_1);
+        } else if (f == 2.0f) {
+            output.addNoArgInstruction(FCONST_2);
+        } else {
+            output.addLDCInstruction(f);
+        }
     }
 
     /**
