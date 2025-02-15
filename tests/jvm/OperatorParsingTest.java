@@ -22,27 +22,41 @@ public class OperatorParsingTest {
         // Logical Right Shift >>>
         int logicalrightshifting = 24000l >>> 3;
 
+        // tests for JBooleanBinaryExpressions
+        // equals ==
+        boolean equalTest = true == false;
+        // and &&
+        boolean andTest = true && false;
+        // or ||
+        boolean orTest = false || true;
+        // not equals !=
+        boolean notEqualTest = true != false;
+
         // tests for all unary operators from JUnaryExpression
         // logical not !
         boolean result1 = !true;
-        // unary negation -
+//        // unary negation -
         int result2 = -5;
-        // post decrement --
-        int result3 = 10;
-        result3--;
-        // pre increment ++
-        int result4 = 5;
-        ++result4;
-        // unary plus +
-        int result5 = +3;
-        // unary complement ~
+//        // post decrement --
+//        int result3 = 10;
+//        result3--;
+//        // pre increment ++
+        int result4 = ++5;
+//        ++result4;
+//        // unary plus +
+//        int result5 = +3;
+//        // unary complement ~
         int result6 = ~5;
-        // post increment ++
-        int result7 = 20;
-        result7++;
-        // pre decrement --
-        int result8 = 15;
-        --result8;
+//        // post increment ++
+//        int result7 = 20;
+//        result7++;
+//        // pre decrement --
+        int result8 = --15;
+//        --result8;
+        // logical not op !
+        int result9 = !10;
+
+        int result10 = (7 > 5) ? 10 : 20;
 
     }
 }

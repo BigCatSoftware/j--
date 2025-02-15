@@ -271,13 +271,14 @@ class Scanner {
                     return new TokenInfo(LESS, line);
                 }
             case '!':
+                System.out.println(ch);
                 nextCh();
+                System.out.println(ch);
                 if (ch == '=') {
                     nextCh();
                     return new TokenInfo(NOT_EQ, line);
-                } else {
-                    return new TokenInfo(LNOT, line);
                 }
+                return new TokenInfo(LNOT, line);
             case '&':
                 nextCh();
                 if (ch == '&') {

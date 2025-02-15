@@ -140,7 +140,15 @@ class JLogicalOrOp extends JBooleanBinaryExpression {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) lhs.analyze(context);
+        rhs = (JExpression) rhs.analyze(context);
+
+        if (lhs.type() != Type.BOOLEAN || rhs.type() != Type.BOOLEAN) {
+            JAST.compilationUnit.reportSemanticError(line,
+                    "Operands to || must be boolean, but found: %s and %s", lhs.type(), rhs.type());
+        }
+
+        type = Type.BOOLEAN;
         return this;
     }
 
@@ -148,7 +156,15 @@ class JLogicalOrOp extends JBooleanBinaryExpression {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output, String targetLabel, boolean onTrue) {
-        // TODO
+        if (onTrue) {
+            lhs.codegen(output, targetLabel, true);
+            rhs.codegen(output, targetLabel, true);
+        } else {
+            String falseLabel = output.createLabel();
+            lhs.codegen(output, falseLabel, true);
+            rhs.codegen(output, targetLabel, false);
+            output.addLabel(falseLabel);
+        }
     }
 }
 
@@ -172,7 +188,15 @@ class JNotEqualOp extends JBooleanBinaryExpression {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) lhs.analyze(context);
+        rhs = (JExpression) rhs.analyze(context);
+
+        if (lhs.type() == rhs.type()) {
+            type = Type.BOOLEAN;
+        } else {
+            JAST.compilationUnit.reportSemanticError(line,
+                    "Incompatible types for !=: %s and %s", lhs.type(), rhs.type());
+        }
         return this;
     }
 
@@ -180,6 +204,14 @@ class JNotEqualOp extends JBooleanBinaryExpression {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output, String targetLabel, boolean onTrue) {
-        // TODO
+        if (onTrue) {
+            lhs.codegen(output, targetLabel, true);
+            rhs.codegen(output, targetLabel, true);
+        } else {
+            String falseLabel = output.createLabel();
+            lhs.codegen(output, falseLabel, true);
+            rhs.codegen(output, targetLabel, false);
+            output.addLabel(falseLabel);
+        }
     }
 }

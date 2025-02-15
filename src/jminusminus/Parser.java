@@ -2,6 +2,7 @@
 
 package jminusminus;
 
+import java.awt.geom.NoninvertibleTransformException;
 import java.util.ArrayList;
 
 import static jminusminus.TokenKind.*;
@@ -667,6 +668,18 @@ public class Parser {
             return new JAssignOp(line, lhs, assignmentExpression());
         } else if (have(PLUS_ASSIGN)) {
             return new JPlusAssignOp(line, lhs, assignmentExpression());
+        } else if (have(TERN)) {
+            JExpression condition = lhs;
+            JExpression thenPart = expression();
+            if (!have(COLON)) {
+                try {
+                    throw new ParseException("Expected ':' after the then part of the expression.");
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            JExpression elsePart = expression();
+            return new JConditionalExpression(line, condition, thenPart, elsePart);
         } else {
             return lhs;
         }
@@ -688,6 +701,8 @@ public class Parser {
         while (more) {
             if (have(LAND)) {
                 lhs = new JLogicalAndOp(line, lhs, equalityExpression());
+            } else if (have(LOR)) {
+                lhs = new JLogicalOrOp(line, lhs, equalityExpression());
             } else {
                 more = false;
             }
@@ -739,6 +754,8 @@ public class Parser {
         while (more) {
             if (have(EQUAL)) {
                 lhs = new JEqualOp(line, lhs, relationalExpression());
+            } else if (have(NOT_EQ)) {
+                lhs = new JNotEqualOp(line, lhs, relationalExpression());
             } else {
                 more = false;
             }
@@ -852,11 +869,14 @@ public class Parser {
     }
 
     /**
-     * Parses an unary expression and returns an AST for it.
+     * Parses a unary expression and returns an AST for it.
      *
      * <pre>
      *   unaryExpression ::= INC unaryExpression
+     *                     | DEC unaryExpression
      *                     | MINUS unaryExpression
+     *                     | LNOT unaryExpression
+     *                     | COMP unaryExpression
      *                     | simpleUnaryExpression
      * </pre>
      *
@@ -866,8 +886,15 @@ public class Parser {
         int line = scanner.token().line();
         if (have(INC)) {
             return new JPreIncrementOp(line, unaryExpression());
+        } else if (have(DEC)) {
+            return new JPreDecrementOp(line, unaryExpression());
         } else if (have(MINUS)) {
+            System.out.println("Parsed Unary Negation: " + scanner.token().image());
             return new JNegateOp(line, unaryExpression());
+        } else if (have(LNOT)) {
+            return new JLogicalNotOp(line, unaryExpression());
+        } else if (have(TILDE)) {
+            return new JComplementOp(line, unaryExpression());
         } else {
             return simpleUnaryExpression();
         }
@@ -889,7 +916,11 @@ public class Parser {
         int line = scanner.token().line();
         if (have(LNOT)) {
             return new JLogicalNotOp(line, unaryExpression());
-        } else if (seeCast()) {
+        }
+//        else if (have(MINUS)) {
+//            return new JNegateOp(line, unaryExpression());
+//        }
+        else if (seeCast()) {
             mustBe(LPAREN);
             boolean isBasicType = seeBasicType();
             Type type = type();
