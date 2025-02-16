@@ -30,11 +30,39 @@ public class JSwitchStatement extends JStatement {
         this.stmtGroup = stmtGroup;
     }
 
+    // Note: By Java 11, switch statements could use short, int, char,
+    // string and enum. This means I'll need to try and implement
+    // use of int, char, and string
+
+    // I think I need to analyze the initialization statements
+    // then analyze the condition expression
     /**
      * {@inheritDoc}
      */
     public JStatement analyze(Context context) {
-        // TODO
+        condition = (JExpression) condition.analyze(context);
+
+        Type condType = condition.type();
+        if (!(condType == Type.INT || condType == Type.CHAR || condType == Type.STRING)) {
+            JAST.compilationUnit.reportSemanticError(line(),
+                    "Switch condition must be int, char, or string");
+        }
+
+        for (SwitchStatementGroup group : stmtGroup) {
+            for (JExpression label : group.switchLabels) {
+                if (label != null) {
+                    label = (JExpression) label.analyze(context);
+                    if (!(label.type() == condType)) {
+                        JAST.compilationUnit.reportSemanticError(line(),
+                                "Case label type must match switch condition type.");
+                    }
+                }
+            }
+            for (JStatement stmt : group.block) {
+                stmt.analyze(context);
+            }
+        }
+
         return this;
     }
 
@@ -42,7 +70,37 @@ public class JSwitchStatement extends JStatement {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        String endLabel = output.createLabel();
+
+        condition.codegen(output);
+
+        ArrayList<String> caseLabels = new ArrayList<>();
+        for (int i = 0; i < stmtGroup.size(); i++) {
+            caseLabels.add(output.createLabel());
+        }
+
+        for (int i = 0; i < stmtGroup.size(); i++) {
+            SwitchStatementGroup group = stmtGroup.get(i);
+            for (JExpression label : group.switchLabels) {
+                if (label != null) {
+                    label.codegen(output);
+                    output.addBranchInstruction(IF_ICMPEQ, caseLabels.get(i));
+                }
+            }
+        }
+
+        String defaultLabel = output.createLabel();
+        output.addBranchInstruction(GOTO, defaultLabel);
+
+        for (int i = 0; i < stmtGroup.size(); i++) {
+            output.addLabel(caseLabels.get(i));
+            for (JStatement stmt : stmtGroup.get(i).block) {
+                stmt.codegen(output);
+            }
+        }
+
+        output.addLabel(defaultLabel);
+        output.addLabel(endLabel);
     }
 
     /**
@@ -65,10 +123,10 @@ public class JSwitchStatement extends JStatement {
  */
 class SwitchStatementGroup {
     // Case labels.
-    private ArrayList<JExpression> switchLabels;
+    ArrayList<JExpression> switchLabels;
 
     // Block of statements.
-    private ArrayList<JStatement> block;
+    ArrayList<JStatement> block;
 
     /**
      * Constructs a switch-statement group.

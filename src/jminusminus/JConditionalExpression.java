@@ -41,7 +41,7 @@ class JConditionalExpression extends JExpression {
         System.out.println("Condition: " + condition);
         if (condition.type() != Type.BOOLEAN) {
             JAST.compilationUnit.reportSemanticError(line,
-                    "Consitional expression condition must be a boolean.");
+                    "Conditional expression condition must be a boolean.");
         }
 
         System.out.println("ElsePart: " + elsePart);

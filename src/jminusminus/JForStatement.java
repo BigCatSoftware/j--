@@ -44,7 +44,27 @@ class JForStatement extends JStatement {
      * {@inheritDoc}
      */
     public JForStatement analyze(Context context) {
-        // TODO
+        // Analyze initialization statements
+        for (JStatement stmt : init) {
+            stmt.analyze(context);
+        }
+
+        // Analyze the condition expression
+        if (condition != null) {
+            condition = condition.analyze(context);
+            if (condition.type() != Type.BOOLEAN) {
+                throw new RuntimeException("Condition must be a boolean expression.");
+            }
+        }
+
+        // Analyze update statements (Fix: Ensure all update expressions are analyzed)
+        for (JStatement stmt : update) {
+            stmt.analyze(context);
+        }
+
+        // Analyze the body of the loop
+        body.analyze(context);
+
         return this;
     }
 
@@ -52,7 +72,35 @@ class JForStatement extends JStatement {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        String conditionLabel = output.createLabel();
+        String bodyLabel = output.createLabel();
+        String doneLabel = output.createLabel();
+
+        // Step 1: Code for the initialization part
+        for (JStatement stmt : init) {
+            stmt.codegen(output);
+        }
+
+        // step 2: Code for the condition
+        output.addLabel(conditionLabel);
+        if (condition != null) {
+            condition.codegen(output, doneLabel, false);
+        }
+
+        // Step 3: Code for the body
+        output.addLabel(bodyLabel);
+        body.codegen(output);
+
+        // Step 4: Code for the update
+        for (JStatement stmt : update) {
+            stmt.codegen(output);
+        }
+
+        // Step 5: Jump back to condition evaluation
+        output.addBranchInstruction(GOTO, conditionLabel);
+
+        // Step 6: Done label
+        output.addLabel(doneLabel);
     }
 
     /**

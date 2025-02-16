@@ -148,7 +148,20 @@ class JMinusAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        if (!(lhs instanceof JLhs)) {
+            JAST.compilationUnit.reportSemanticError(line(), "Illegal lhs for assignment");
+            return this;
+        } else {
+            lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        }
+        rhs = (JExpression) rhs.analyze(context);
+        if (lhs.type().equals(Type.INT)) {
+            rhs.type().mustMatchExpected(line(), Type.INT);
+            type = Type.INT;
+        } else {
+            JAST.compilationUnit.reportSemanticError(line(),
+                    "Invalid lhs type for -=: " + lhs.type());
+        }
         return this;
     }
 
@@ -156,7 +169,16 @@ class JMinusAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(ISUB);
+
+        if (!isStatementExpression) {
+            ((JLhs) lhs).codegenDuplicateRvalue(output);
+        }
+
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -179,7 +201,10 @@ class JStarAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -187,7 +212,11 @@ class JStarAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IMUL);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -210,7 +239,10 @@ class JDivAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -218,7 +250,11 @@ class JDivAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IDIV);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -241,7 +277,10 @@ class JRemAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -249,7 +288,11 @@ class JRemAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IREM);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -272,7 +315,10 @@ class JOrAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -280,7 +326,11 @@ class JOrAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IOR);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -303,7 +353,10 @@ class JAndAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -311,7 +364,11 @@ class JAndAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IAND);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -334,7 +391,10 @@ class JXorAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -342,7 +402,11 @@ class JXorAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IXOR);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -365,7 +429,10 @@ class JALeftShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -373,7 +440,11 @@ class JALeftShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(ISHL);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -396,7 +467,10 @@ class JARightShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -404,7 +478,11 @@ class JARightShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(ISHR);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
 
@@ -427,7 +505,10 @@ class JLRightShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public JExpression analyze(Context context) {
-        // TODO
+        lhs = (JExpression) ((JLhs) lhs).analyzeLhs(context);
+        rhs = (JExpression) rhs.analyze(context);
+        rhs.type().mustMatchExpected(line(), lhs.type());
+        type = lhs.type();
         return this;
     }
 
@@ -435,6 +516,10 @@ class JLRightShiftAssignOp extends JAssignment {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        ((JLhs) lhs).codegenLoadLhsLvalue(output);
+        ((JLhs) lhs).codegenLoadLhsRvalue(output);
+        rhs.codegen(output);
+        output.addNoArgInstruction(IUSHR);
+        ((JLhs) lhs).codegenStore(output);
     }
 }
