@@ -44,7 +44,23 @@ class JTryStatement extends JStatement {
      * {@inheritDoc}
      */
     public JTryStatement analyze(Context context) {
-        // TODO
+        tryBlock = (JBlock) tryBlock.analyze(context);
+
+        for (int i = 0; i < catchBlocks.size(); i++) {
+            JFormalParameter param = parameters.get(i);
+            JBlock catchBlock = catchBlocks.get(i);
+
+            Type exceptionType = param.type();
+
+            LocalContext catchContext = new LocalContext(context);
+            catchContext.addEntry(line(), param.name(), new LocalVariableDefn(exceptionType, 0));
+
+            catchBlocks.set(i, catchBlock.analyze(catchContext));
+        }
+
+        if (finallyBlock != null) {
+            finallyBlock = finallyBlock.analyze(context);
+        }
         return this;
     }
 
@@ -52,7 +68,49 @@ class JTryStatement extends JStatement {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        String startTry = output.createLabel();
+        String endTry = output.createLabel();
+        String finallyStart = (finallyBlock != null) ? output.createLabel() : null;
+        String endFinally = output.createLabel();
+
+        ArrayList<String> catchLabels = new ArrayList<>();
+        ArrayList<String> endCatches = new ArrayList<>();
+
+        // Start Try Block
+        output.addLabel(startTry);
+        tryBlock.codegen(output);
+        output.addLabel(endTry);
+
+        // Jump to finally block if present
+        if (finallyBlock != null) {
+            output.addBranchInstruction(GOTO, finallyStart);
+        } else {
+            output.addBranchInstruction(GOTO, endFinally);
+        }
+
+        // Generate Catch Blocks
+        for (int i = 0; i < catchBlocks.size(); i++) {
+            String catchLabel = output.createLabel();
+            String endCatch = output.createLabel();
+            catchLabels.add(catchLabel);
+            endCatches.add(endCatch);
+
+            output.addLabel(catchLabel);
+            output.addNoArgInstruction(ASTORE_1);  // Store exception in local variable
+            catchBlocks.get(i).codegen(output);
+            output.addBranchInstruction(GOTO, endFinally);
+
+            // Add exception table entry
+            output.addExceptionHandler(startTry, endTry, catchLabel, parameters.get(i).type().jvmName());
+        }
+
+        // Generate Finally Block if present
+        if (finallyBlock != null) {
+            output.addLabel(finallyStart);
+            finallyBlock.codegen(output);
+        }
+
+        output.addLabel(endFinally);
     }
 
     /**

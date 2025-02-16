@@ -59,7 +59,7 @@ public class OperatorParsingTest {
 //        ++v;
 //        --v;
         int w = 10;
-        int w2 = ~w; //
+        int w2 = ~w;
         int w3 = !w;
         int x = -10; //
         int y = !10;

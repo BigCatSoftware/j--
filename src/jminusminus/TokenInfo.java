@@ -73,7 +73,9 @@ enum TokenKind {
     /*
      * I may not need this. I'm not sure if TRUE and FALSE cover this type of literal yet
      */
-    BOOLEAN_LITERAL("<BOOLEAN_LITERAL>"); //
+    BOOLEAN_LITERAL("<BOOLEAN_LITERAL>"),
+
+    ELLIPSIS("..."); //
 
     // The token kind's string representation.
     private String image;

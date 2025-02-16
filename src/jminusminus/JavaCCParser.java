@@ -731,7 +731,7 @@ class JavaCCParser implements JavaCCParserConstants {
             recoverFromError(new int[]{SEMI, EOF}, e);
         }
         {
-            if ("" != null) return new JFormalParameter(line, name, type);
+            if ("" != null) return new JFormalParameter(line, name, type, false);
         }
         throw new Error("Missing return statement in function");
     }

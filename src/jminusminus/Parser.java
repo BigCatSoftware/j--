@@ -259,8 +259,11 @@ public class Parser {
                 mustBe(IDENTIFIER);
                 String name = scanner.previousToken().image();
                 ArrayList<JFormalParameter> params = formalParameters();
+
+                ArrayList<TypeName> exceptions = parseThrowsClause();
+
                 JBlock body = have(SEMI) ? null : block();
-                memberDecl = new JMethodDeclaration(line, mods, name, type, params, null, body);
+                memberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, body);
             } else {
                 type = type();
                 if (seeIdentLParen()) {
@@ -268,8 +271,11 @@ public class Parser {
                     mustBe(IDENTIFIER);
                     String name = scanner.previousToken().image();
                     ArrayList<JFormalParameter> params = formalParameters();
+
+                    ArrayList<TypeName> exceptions = parseThrowsClause();
+
                     JBlock body = have(SEMI) ? null : block();
-                    memberDecl = new JMethodDeclaration(line, mods, name, type, params, null, body);
+                    memberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, body);
                 } else {
                     // A field.
                     memberDecl = new JFieldDeclaration(line, mods, variableDeclarators(type));
@@ -279,6 +285,17 @@ public class Parser {
         }
         return memberDecl;
     }
+
+    private ArrayList<TypeName> parseThrowsClause() {
+        ArrayList<TypeName> exceptions = new ArrayList<>();
+        if (have(THROWS)) {
+            do {
+                exceptions.add(qualifiedIdentifier());
+            } while (have(COMMA));
+        }
+        return exceptions;
+    }
+
 
     /**
      * Parses a block and returns an AST for it.
@@ -338,7 +355,11 @@ public class Parser {
             return forStatement();
         } else if (have(SWITCH)) {
             return switchStatement();
-        }else if (see(LCURLY)) {
+        } else if (have(TRY)) {
+            return tryCatchFinallyStatement();
+        } else if (have(THROW)) {
+            return throwStatement();
+        } else if (see(LCURLY)) {
             return block();
         } else if (have(IF)) {
             JExpression test = parExpression();
@@ -365,6 +386,42 @@ public class Parser {
             mustBe(SEMI);
             return statement;
         }
+    }
+
+    private JStatement throwStatement() {
+        int line = scanner.token().line();
+        mustBe(THROW);
+        JExpression expr = expression();
+        mustBe(SEMI);
+        return new JThrowStatement(line, expr);
+    }
+
+    private JStatement tryCatchFinallyStatement() {
+        int line = scanner.token().line();
+
+        // Parse try block
+        mustBe(TRY);
+        JBlock tryblock = block();
+
+        ArrayList<JFormalParameter> parameters = new ArrayList<>();
+        ArrayList<JBlock> catchBlocks = new ArrayList<>();
+        JBlock finallyblock = null;
+
+        // Parse catch clauses
+        while (have(CATCH)) {
+            mustBe(LPAREN);
+            JFormalParameter param = formalParameter();
+            parameters.add(param);
+            mustBe(RPAREN);
+            catchBlocks.add(block());
+        }
+
+        // Parse finally block if present
+        if (have(FINALLY)) {
+            finallyblock = block();
+        }
+
+        return new JTryStatement(line, tryblock, parameters, catchBlocks, finallyblock);
     }
 
     /**
@@ -489,14 +546,30 @@ public class Parser {
      * @return a list of formal parameters.
      */
     private ArrayList<JFormalParameter> formalParameters() {
-        ArrayList<JFormalParameter> parameters = new ArrayList<JFormalParameter>();
+        ArrayList<JFormalParameter> parameters = new ArrayList<>();
         mustBe(LPAREN);
+
         if (have(RPAREN)) {
             return parameters;
         }
+
+        boolean seenVarargs = false;
+
         do {
-            parameters.add(formalParameter());
+            JFormalParameter param = formalParameter();
+
+            if (param.isVarArgs()) {
+                if (seenVarargs) {
+                    reportParserError("Only the last parameter can be variable arity (varargs).");
+                }
+                seenVarargs = true;
+            } else if (seenVarargs) {
+                reportParserError("Varargs parameter must be in the parameter list.");
+            }
+
+            parameters.add(param);
         } while (have(COMMA));
+
         mustBe(RPAREN);
         return parameters;
     }
@@ -513,9 +586,17 @@ public class Parser {
     private JFormalParameter formalParameter() {
         int line = scanner.token().line();
         Type type = type();
+        boolean isVarargs = false;
+
+        if (have(ELLIPSIS)) {
+            mustBe(ELLIPSIS);
+            isVarargs = true;
+        }
+
         mustBe(IDENTIFIER);
         String name = scanner.previousToken().image();
-        return new JFormalParameter(line, name, type);
+
+        return new JFormalParameter(line, name, type, isVarargs);
     }
 
     /**

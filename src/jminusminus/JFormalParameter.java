@@ -12,6 +12,9 @@ class JFormalParameter extends JAST {
     // Parameter type.
     private Type type;
 
+    // Parameter type.
+    private boolean isVarargs;
+
     /**
      * Constructs an AST node for a formal parameter declaration.
      *
@@ -19,10 +22,19 @@ class JFormalParameter extends JAST {
      * @param name parameter name.
      * @param type parameter type.
      */
-    public JFormalParameter(int line, String name, Type type) {
+    public JFormalParameter(int line, String name, Type type, boolean isVarargs) {
         super(line);
         this.name = name;
         this.type = type;
+        this.isVarargs = isVarargs;
+    }
+
+    public boolean isVarArgs() { return isVarargs; }
+
+    public void writeToStdOut(PrettyPrinter p) {
+        String typeStr = isVarargs ? type.toString() + "..." : type.toString();
+        p.printf("<JFormalParameter line=\"%d\" name=\"%s\" type=\"%s\" varargs=\"%b\"/>\n",
+                line, name, typeStr, isVarargs);
     }
 
     /**
