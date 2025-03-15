@@ -40,6 +40,9 @@ class JClassDeclaration extends JAST implements JTypeDecl {
     // Static (class) fields of this class.
     private ArrayList<JFieldDeclaration> staticFieldInitializations;
 
+    // Class-level variable to track if a public class is already found.
+    private static boolean foundPublicClass = false;
+
     /**
      * Constructs an AST node for a class declaration.
      *
@@ -61,6 +64,7 @@ class JClassDeclaration extends JAST implements JTypeDecl {
         hasExplicitConstructor = false;
         instanceFieldInitializations = new ArrayList<JFieldDeclaration>();
         staticFieldInitializations = new ArrayList<JFieldDeclaration>();
+        foundPublicClass = false;
     }
 
     /**

@@ -31,7 +31,17 @@ public class JDoStatement extends JStatement {
      * {@inheritDoc}
      */
     public JStatement analyze(Context context) {
-        // TODO
+        // analyze the body
+        body = (JStatement) body.analyze(context);
+
+        // analyze the condition
+        condition = condition.analyze(context);
+
+        if (condition.type() != Type.BOOLEAN) {
+            JAST.compilationUnit.reportSemanticError(line(),
+                    "Loop condition must be a boolean expression.");
+        }
+
         return this;
     }
 
@@ -39,7 +49,22 @@ public class JDoStatement extends JStatement {
      * {@inheritDoc}
      */
     public void codegen(CLEmitter output) {
-        // TODO
+        String loopStart = output.createLabel(); // Label for start of loop
+        String loopCondition = output.createLabel(); // Label for condition evaluation
+        String loopEnd = output.createLabel(); // Label for loop exit
+
+        // Step 1: Mark the beginning of the loop
+        output.addLabel(loopStart);
+
+        // Step 2: Generate code for the loop body
+        body.codegen(output);
+
+        // Step 3: Evaluate condition
+        output.addLabel(loopCondition);
+        condition.codegen(output, loopStart, true); // If true, jump back to loop start
+
+        // Step 4: Mark the end of the loop
+        output.addLabel(loopEnd);
     }
 
     /**

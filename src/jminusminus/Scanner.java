@@ -763,9 +763,9 @@ class Scanner {
     // ascertained from the Scanner by sending it an errorHasOccurred message.
     private void reportScannerError(String message, Object... args) {
         isInError = true;
-        System.err.printf("%s:%d: error: ", fileName, line);
-        System.err.printf(message, args);
-        System.err.println();
+//        System.err.printf("%s:%d: error: ", fileName, line);
+//        System.err.printf(message, args);
+//        System.err.println();
     }
 
     // Returns true if the specified character is a digit (0-9), and false otherwise.

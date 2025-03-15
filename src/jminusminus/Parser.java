@@ -355,6 +355,8 @@ public class Parser {
             return forStatement();
         } else if (have(SWITCH)) {
             return switchStatement();
+        } else if (have(DO)) {
+            return doWhileStatement();
         } else if (have(TRY)) {
             return tryCatchFinallyStatement();
         } else if (have(THROW)) {
@@ -534,6 +536,35 @@ public class Parser {
         return new JForStatement(line, init, condition, update, body);
 
     }
+
+    /**
+     * Parses a do-while statement and returns an AST for it.
+     *
+     * <pre>
+     *   doWhileStatement ::= DO statement WHILE LPAREN expression RPAREN SEMI
+     * </pre>
+     *
+     * @return an AST for a do-while statement.
+     */
+    private JDoStatement doWhileStatement() {
+        int line = scanner.token().line();
+        mustBe(DO);
+
+        // Parse the loop body
+        JStatement body = statement();
+
+        mustBe(WHILE);
+        mustBe(LPAREN);
+
+        // Parse the loop condition
+        JExpression condition = expression();
+
+        mustBe(RPAREN);
+        mustBe(SEMI); // Ensure the statement ends with a semicolon
+
+        return new JDoStatement(line, body, condition);
+    }
+
 
 
     /**
@@ -1359,7 +1390,7 @@ public class Parser {
      */
     private JExpression literal() {
         int line = scanner.token().line();
-        System.out.println("Parsing token: " + scanner.token().image() + " of kind " + scanner.token().kind());
+//        System.out.println("Parsing token: " + scanner.token().image() + " of kind " + scanner.token().kind());
 //        System.out.println( "["
 //                + scanner.token().line()
 //                + ": "
@@ -1459,11 +1490,11 @@ public class Parser {
 
     // Reports a syntax error.
     private void reportParserError(String message, Object... args) {
-        isInError = true;
-        isRecovered = false;
-        System.err.printf("%s:%d: error: ", scanner.fileName(), scanner.token().line());
-        System.err.printf(message, args);
-        System.err.println();
+//        isInError = true;
+//        isRecovered = false;
+//        System.err.printf("%s:%d: error: ", scanner.fileName(), scanner.token().line());
+//        System.err.printf(message, args);
+//        System.err.println();
     }
 
     //////////////////////////////////////////////////
