@@ -73,7 +73,7 @@ class JForStatement extends JStatement {
      */
     public void codegen(CLEmitter output) {
         String conditionLabel = output.createLabel();
-        String bodyLabel = output.createLabel();
+        String updateLabel = output.createLabel();
         String doneLabel = output.createLabel();
 
         // Step 1: Code for the initialization part
@@ -82,22 +82,31 @@ class JForStatement extends JStatement {
         }
 
         // step 2: Code for the condition
-        output.addLabel(conditionLabel);
-        if (condition != null) {
-            condition.codegen(output, doneLabel, false);
-        }
+//        output.addLabel(conditionLabel);
+//        if (condition != null) {
+//            condition.codegen(output, doneLabel, false);
+//        }
+        output.addBranchInstruction(GOTO, conditionLabel);
 
         // Step 3: Code for the body
-        output.addLabel(bodyLabel);
+        output.addLabel(output.createLabel()); // Make the start of the loop body
         body.codegen(output);
 
         // Step 4: Code for the update
+        output.addLabel(updateLabel);
         for (JStatement stmt : update) {
             stmt.codegen(output);
         }
 
         // Step 5: Jump back to condition evaluation
-        output.addBranchInstruction(GOTO, conditionLabel);
+//        output.addBranchInstruction(GOTO, conditionLabel);
+        output.addLabel(conditionLabel);
+        if (condition != null) {
+            condition.codegen(output);
+            output.addBranchInstruction(IFNE, updateLabel); // Loop again if condition is true
+        } else {
+            output.addBranchInstruction(GOTO, updateLabel); // Infinite loop
+        }
 
         // Step 6: Done label
         output.addLabel(doneLabel);

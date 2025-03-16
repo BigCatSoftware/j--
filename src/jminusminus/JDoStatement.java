@@ -61,7 +61,7 @@ public class JDoStatement extends JStatement {
 
         // Step 3: Evaluate condition
         output.addLabel(loopCondition);
-        condition.codegen(output, loopStart, true); // If true, jump back to loop start
+        output.addBranchInstruction(IFNE, loopStart); // If true, jump back to loop start
 
         // Step 4: Mark the end of the loop
         output.addLabel(loopEnd);

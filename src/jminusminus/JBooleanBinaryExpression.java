@@ -157,13 +157,25 @@ class JLogicalOrOp extends JBooleanBinaryExpression {
      */
     public void codegen(CLEmitter output, String targetLabel, boolean onTrue) {
         if (onTrue) {
+            // Short-circuit if lhs is true
             lhs.codegen(output, targetLabel, true);
+            // If lhs is false, evaluate rhs
             rhs.codegen(output, targetLabel, true);
         } else {
-            String falseLabel = output.createLabel();
-            lhs.codegen(output, falseLabel, true);
+//            String falseLabel = output.createLabel();
+//            lhs.codegen(output, falseLabel, true);
+//            rhs.codegen(output, targetLabel, false);
+//            output.addLabel(falseLabel);
+            // Need a label to ensure lhs AND rhs are false before continuing
+            String evalRHSLabel = output.createLabel();
+
+            // If lhs is true, we don't jump (we need both false)
+            lhs.codegen(output, evalRHSLabel, true);
+            // If lhs is false, evaluate rhs
             rhs.codegen(output, targetLabel, false);
-            output.addLabel(falseLabel);
+
+            // Mark where to evaluate rhs after lhs fails
+            output.addLabel(evalRHSLabel);
         }
     }
 }

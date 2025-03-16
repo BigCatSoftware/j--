@@ -87,17 +87,21 @@ class JConditionalExpression extends JExpression {
         String doneLabel = output.createLabel();
 
         // Step 2: Generate code for the condition (evaluation of the boolean expression)
-        condition.codegen(output, elseLabel, true);  // Jump to elseLabel if condition is false
+        condition.codegen(output, elseLabel, false);  // Jump to elseLabel if condition is false
 
         // Step 3: Generate code for the "thenPart" if condition is true
         thenPart.codegen(output);
         output.addBranchInstruction(GOTO, doneLabel);  // Skip else part after executing thenPart
 
         // Step 4: Generate label for the "else" part
+//        output.addLabel(elseLabel);
+//        // Generate code for the "elsePart" if condition is false
+//        System.out.println("ElsePart: " + elsePart);
+//        elsePart.codegen(output);
         output.addLabel(elseLabel);
-        // Generate code for the "elsePart" if condition is false
-        System.out.println("ElsePart: " + elsePart);
-        elsePart.codegen(output);
+        if (elsePart != null) {
+            elsePart.codegen(output);
+        }
 
         // Step 5: Done, add final label after both then/else evaluations
         output.addLabel(doneLabel);

@@ -925,6 +925,74 @@ public class CLEmitter {
         mInstructionAfterLabel = false;
     }
 
+    // Start of the code I'm adding for Assignment 4
+    /**
+     * Adds support for the do-while loop.
+     */
+    public void addDoWhileLoop(String loopStart, String loopEnd) {
+        addLabel(loopStart); // Start of the loop
+        // (Loop body should be added before calling this method)
+        addLabel(loopEnd);
+        addBranchInstruction(IFNE, loopStart); // If condition is true, repeat loop
+    }
+
+    /**
+     * Adds support for the classic for-loop.
+     */
+    public void addForLoop(String conditionLabel, String updateLabel, String bodyLabel, String exitLabel) {
+        addBranchInstruction(GOTO, conditionLabel);
+        addLabel(bodyLabel);
+        // (Loop body should be added before calling this method)
+        addLabel(updateLabel);
+        // (Update expression should be added before calling this method)
+        addLabel(conditionLabel);
+        addBranchInstruction(IFNE, bodyLabel); // If condition is true, execute loop body
+        addLabel(exitLabel); // Exit label
+    }
+
+    /**
+     * Adds support for the conditional expression (?:)
+     */
+    public void addConditionalExpression(String falseLabel, String endLabel) {
+        addBranchInstruction(IFEQ, falseLabel); // If false, jump to else case
+        // (True expression should be added before calling this method)
+        addBranchInstruction(GOTO, endLabel);
+        addLabel(falseLabel);
+        // (False expression should be added before calling this method)
+        addLabel(endLabel);
+    }
+
+    /**
+     * Adds support for the conditional-or operator (||)
+     */
+    public void addLogicalOr(String trueLabel, String endLabel) {
+        addBranchInstruction(IFNE, trueLabel); // If first operand is true, short-circuit
+        // (Second operand should be evaluated before calling this method)
+        addBranchInstruction(IFNE, trueLabel); // If second operand is true, short-circuit
+        addNoArgInstruction(ICONST_0); // If neither is true, push 0 (false)
+        addBranchInstruction(GOTO, endLabel);
+        addLabel(trueLabel);
+        addNoArgInstruction(ICONST_1); // Push 1 (true)
+        addLabel(endLabel);
+    }
+
+    /**
+     * Adds support for the throw statement.
+     */
+    public void addThrowStatement() {
+        addNoArgInstruction(ATHROW); // Throws the exception on the stack
+    }
+
+    /**
+     * Adds support for the long type (JVM type 'J').
+     */
+    public void addLongTypeSupport() {
+        addOneArgInstruction(LLOAD, 0); // Load long variable from index 0
+        addOneArgInstruction(LLOAD, 2); // Load long variable from index 2
+        addNoArgInstruction(LADD); // Perform addition
+        addOneArgInstruction(LSTORE, 4); // Store result back in index 4
+    }
+
     /**
      * Constructs and returns a unique jump label.
      *
