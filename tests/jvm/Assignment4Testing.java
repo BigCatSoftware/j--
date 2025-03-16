@@ -23,6 +23,6 @@ public class Assignment4Testing {
         long z = 200l;
 
         // throw test
-//        throw new RuntimeException("Test throw statement");
+        throw new RuntimeException("Test throw statement");
     }
 }
